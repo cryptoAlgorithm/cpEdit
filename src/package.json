@@ -1,0 +1,16 @@
+{
+  "name": "cp-edit",
+  "productName": "CPEdit",
+  "version": "0.0.1",
+  "description": "A code editor created for competitive programming",
+  "main": "./main.prod.js",
+  "scripts": {
+    "electron-rebuild": "node -r ../.erb/scripts/BabelRegister.js ../.erb/scripts/ElectronRebuild.js",
+    "postinstall": "yarn electron-rebuild"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "node-sass": "^6.0.1",
+    "sass": "^1.36.0"
+  }
+}

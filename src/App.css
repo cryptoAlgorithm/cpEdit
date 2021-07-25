@@ -1,0 +1,17 @@
+body {
+  user-select: none;
+  overflow: hidden;
+}
+
+.selectable {
+  user-select: text;
+}
+
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.MuiCircularProgress-circle {
+  stroke-linecap: round;
+}
