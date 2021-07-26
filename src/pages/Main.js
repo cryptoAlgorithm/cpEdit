@@ -101,11 +101,9 @@ export default function Main() {
     const run = () => {
         mkdtemp(path.join(os.tmpdir(), 'cpEdit-'), (err, directory) => {
             if (err) throw err;
-            console.log(directory);
 
             writeFile(path.join(directory, 'code'), code, err => {
                 if (err) throw err;
-                console.log('The file has been saved!');
 
                 const cpCmd = compileRunCmd[safeLang.compileCode][platform] ?? compileRunCmd[safeLang.compileCode].other;
 
