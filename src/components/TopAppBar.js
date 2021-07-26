@@ -41,10 +41,11 @@ export default function TopAppBar({runState, run, stop, selLang, setSelLang}) {
                 <Typography variant='h6' component='div' ml={isMac && !isMaximized ? 8 : 0}>CPEdit</Typography>
                 <RunButton state={runState} run={run} kill={stop} os={platform} />
                 <Box flexGrow={1} />
-                <Autocomplete size='small' value={selLang} clearIcon={null}
+                <Autocomplete size='small' value={selLang} clearIcon={null} options={lang}
                               onChange={(e, v) => setPendingSelLang(v)}
                               renderInput={p =>
-                                  <TextField {...p} variant='filled' label='Language' sx={{width: 125, mr: isMac ? 3 : 1.5}} />} options={lang} />
+                                  <TextField {...p} variant='filled' label='Language'
+                                             sx={{width: 125, mr: isMac ? 3 : 1.5, '-webkit-app-region': 'no-drag'}} />} />
                 {!isMac && <WindowButtons max={isMaximized} /> }
             </Toolbar>
         </AppBar>

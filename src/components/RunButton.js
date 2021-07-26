@@ -72,7 +72,7 @@ export default function RunButton({state, run, kill, os}) {
 
     return <Tooltip title={d[state].act ? d[state].act + ' (⌘ D)' : ''}>
         <Button variant='contained' startIcon={d[state].icon} color={d[state].col} onClick={handleRunCmd}
-                sx={{position: 'absolute', left: '50%', top: 6, transform: 'translateX(-50%)',
+                sx={{position: 'absolute', left: '50%', top: 6, '-webkit-app-region': 'no-drag', transform: 'translateX(-50%)',
                     transition: 'background-color .25s ease-in-out'}}>
             {d[state].label}
         </Button>

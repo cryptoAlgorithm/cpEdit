@@ -4,8 +4,6 @@ import {
     Box, Button, Paper,
     Tab,
     Tabs,
-    TextField,
-    Toolbar,
     Typography
 } from '@material-ui/core';
 import Editor, {loader} from '@monaco-editor/react';
@@ -27,7 +25,7 @@ loader.config({
 });
 
 // Native stuff
-const { mkdtemp, writeFile } = require('fs');
+const { mkdtemp, writeFile, rm } = require('fs');
 const { spawn } = require('child_process');
 const os = require('os');
 const { platform } = require('process');
@@ -47,36 +45,60 @@ export default function Main() {
         [editTestcaseOpen, setEditTestcaseOpen] = React.useState(false),
         wvRef = React.useRef(),
         safeLang = selLang ?? lang[0],
-        procRef = React.useRef();
+        procRef = React.useRef([]);
 
     const appendToState = (v, state, addSpace = true) => state(ov => ov + v + (addSpace ? '\n' : ''));
 
+    const execTestcase = (directory, cpCmd, t, i, tot) => {
+        const run = spawn(cpCmd.run.cmd.replace('$dir', directory), cpCmd.run.args, {
+            cwd: directory
+        });
+        procRef.current.push(run);
+
+        if (t) {
+            run.stdin.write(t.in);
+            run.stdin.end();
+        }
+
+        run.stdout.on('data', (data) => appendToState(data, setProgOut, false));
+        run.stderr.on('data', (data) => appendToState(data, setProgOut, false));
+
+        run.on('close', (c) => {
+            if (i === tot - 1) {
+                appendToState('\n#### End of output ####', setProgOut, false);
+
+                setExitCode(c);
+                setRunState(1);
+            }
+
+            // Delete tmp dir
+            rm(directory, { recursive: true, force: true }, e => {
+                if (e) console.error('Failed to delete tmp directory:', directory);
+            });
+        });
+    }
     const runCompiled = (cpCmd, directory) => {
+        console.log(procRef.current)
+
+        if (procRef.current.length !== 0) return;
+
         setProgOut('');
         setExitCode(null);
         setRunState(4);
 
-        const run = spawn(cpCmd.run.cmd.replace('$dir', directory), cpCmd.run.args, {
-            cwd: directory
-        });
-        procRef.current = run;
+        if (testcases.length === 0) {
+            appendToState('No testcases, running without stdin\n', setProgOut);
 
-        /*if (testcase.length !== 0) {
-            run.stdin.write(testcase);
-            run.stdin.end();
-        }*/
+            execTestcase(directory, cpCmd, null, 0, 1);
+        }
 
-        run.stdout.on('data', (data) => appendToState(data, setProgOut, false));
-        run.stderr.on('data', (data) => console.error(`stderr: ${data}`));
+        testcases.forEach((t, i) => {
+            appendToState(`#### Testcase #${i} ####\n`, setProgOut);
 
-        run.on('close', (c) => {
-            setExitCode(c);
-            setRunState(1);
+            execTestcase(directory, cpCmd, t, i, testcases.length);
         });
     }
     const run = () => {
-        console.log('lol should compile now');
-
         mkdtemp(path.join(os.tmpdir(), 'cpEdit-'), (err, directory) => {
             if (err) throw err;
             console.log(directory);
@@ -102,7 +124,7 @@ export default function Main() {
                     const compile = spawn(c.cmd, c.args, {
                         cwd: directory
                     });
-                    procRef.current = compile;
+                    procRef.current.push(compile);
                     appendToState(`Spawning "${c.cmd}" with args [${c.args.join(', ')}]`, setCompOut);
 
                     compile.stdout.on('data', data => appendToState(`stderr: ${data}`, setCompOut));
@@ -114,10 +136,14 @@ export default function Main() {
                         if (code !== 0) { // Compile failed
                             appendToState(`"${c.cmd}" exited with non zero exit code, compile failure`, setCompOut);
                             setRunState(3);
+                            procRef.current = [];
                             return;
                         }
 
-                        if (i === cpCmd.compile.length - 1) runCompiled(cpCmd, directory);
+                        if (i === cpCmd.compile.length - 1) {
+                            procRef.current = [];
+                            runCompiled(cpCmd, directory);
+                        }
                     });
                     compile.stdin.write(code);
                     compile.stdin.end();
@@ -126,8 +152,9 @@ export default function Main() {
         });
     }
     const stop = () => {
-        procRef.current.kill();
+        procRef.current.forEach(p => p.kill());
         setRunState(0);
+        procRef.current = [];
     }
 
     const webViewRef = React.useCallback(elem => {

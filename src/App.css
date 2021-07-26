@@ -10,6 +10,7 @@ body {
 pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  font-size: 14px;
 }
 
 .MuiCircularProgress-circle {

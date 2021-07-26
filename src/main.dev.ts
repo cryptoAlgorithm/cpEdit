@@ -89,10 +89,11 @@ const createWindow = async () => {
     webPreferences: {
       nodeIntegration: true,
       webviewTag: true,
+      contextIsolation: false, // A stopgap fix, will come back to this later
     },
     frame: false,
     titleBarStyle: 'hidden',
-    trafficLightPosition: {x: 18, y: 32},
+    trafficLightPosition: {x: 18, y: 18},
     minWidth: 800,
     minHeight: 700,
     backgroundColor: '#000',
